@@ -20,26 +20,26 @@ fi
 
 #container_engine=podman
 container_engine=docker
-
-container-name=lkr
+container_name=lkr
 docker_image=rancher/k3s:v1.25.3-k3s1
 workdir=/tmp/lkr
 
 start() {
     mkdir -p $workdir
     $container_engine run --rm -d \
-        --name $docker_container \
+        --name $container_name \
         -v /sys/fs/cgroup:/sys/fs/cgroup \
         --privileged \
         -p 6443:6443 \
         $docker_image server --tls-san=localhost --disable=traefik
+    echo "k3s is starting..."
     sleep 10
 
-    $container_engine cp $docker_container:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
+    $container_engine cp $container_name:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
     KUBECONFIG=$workdir/kubeconfig kubectl wait --for=condition=Ready nodes --all --timeout=600s
     echo "k3s ready, creating 'ns' namespace.."
-    within_k3s kubectl create namespace ns
-    within_k3s kubectl config set-context --current --namespace=ns
+    in_context kubectl create namespace ns
+    in_context kubectl config set-context --current --namespace=ns
     echo "Done."
     echo "Use now your cluster prepending lkr to your commands:"
     echo "  lkr k9s"
@@ -47,7 +47,7 @@ start() {
     echo "  lkr helm list"
 }
 stop() {
-    $container_engine rm -f $docker_container
+    $container_engine rm -f $container_name
     rm -rf $workdir
 }
 
@@ -57,12 +57,10 @@ in_context() {
 
 
 if [ "$1" == "start" ]; then
+    stop
     start
 elif [ "$1" == "stop" ]; then
     stop
-elif [ "$1" == "restart" ]; then
-    stop
-    start
 else
     in_context "$@"
 fi

@@ -7,7 +7,6 @@ Supported engines:
 
 Supported container engines:
 - `docker`
-- `podman`
 
 ## Get started
 
