@@ -1,9 +1,14 @@
 #!/bin/bash
 set -e
-echo "🇱​​​​​🇰​​​​​🇷​​​​​ - 🇱​​​​​🇴​​​​​🇨​​​​​🇦​​​​​🇱​​​​​ 🇰​​​​​🇺​​​​​🇧​​​​​🇪​​​​​🇷​​​​​🇳​​​​​🇪​​​​​🇹​​​​​🇪​​​​​🇸​​​​​ 🇷​​​​​🇺​​​​​🇳​​​​​🇳​​​​​🇪​​​​​🇷​​​​​"
+echo "𝖫𝖪𝖱 - 𝖫𝖮𝖢𝖠𝖫 𝖪𝖴𝖡𝖤𝖱𝖭𝖤𝖳𝖤𝖲 𝖱𝖴𝖭𝖭𝖤𝖱"
 if [ "$#" -eq 0 ]; then
-    echo "Speed up your local builds."
-    echo "Prepend 'asap' to maven commands to get useless checks to be skipped while you're developing locally."
+    echo "Local Kubernetes Runner."
+    echo "lkr <any-command-targeting-local-k8s-instance>"
+    echo ""
+    echo "  start: start a k8s instance"
+    echo "  stop: start a k8s instance"
+    echo "  9: k9s"
+    echo "  k: kubectl"
     echo "$(tput setaf 2)asap mvn clean install$(tput setaf 4)"
     exit 1
 fi
@@ -62,10 +67,3 @@ elif [ "$1" == "9" ]; then
 else
     in_context "$@"
 fi
-
-
-
-
-
-
-
