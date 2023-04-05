@@ -1,0 +1,75 @@
+#!/bin/bash
+set -e
+echo "
+██╗     ██╗  ██╗██████╗ 
+██║     ██║ ██╔╝██╔══██╗
+██║     █████╔╝ ██████╔╝
+██║     ██╔═██╗ ██╔══██╗
+███████╗██║  ██╗██║  ██║
+╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝                      
+
+"
+if [ "$#" -eq 0 ]; then
+    echo "Speed up your local builds."
+    echo "Prepend 'asap' to maven commands to get useless checks to be skipped while you're developing locally."
+    echo "$(tput setaf 2)asap mvn clean install$(tput setaf 4)"
+    exit 1
+fi
+
+
+
+#container_engine=podman
+container_engine=docker
+
+container-name=lkr
+docker_image=rancher/k3s:v1.25.3-k3s1
+workdir=/tmp/lkr
+
+start() {
+    mkdir -p $workdir
+    $container_engine run --rm -d \
+        --name $docker_container \
+        -v /sys/fs/cgroup:/sys/fs/cgroup \
+        --privileged \
+        -p 6443:6443 \
+        $docker_image server --tls-san=localhost --disable=traefik
+    sleep 10
+
+    $container_engine cp $docker_container:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
+    KUBECONFIG=$workdir/kubeconfig kubectl wait --for=condition=Ready nodes --all --timeout=600s
+    echo "k3s ready, creating 'ns' namespace.."
+    within_k3s kubectl create namespace ns
+    within_k3s kubectl config set-context --current --namespace=ns
+    echo "Done."
+    echo "Use now your cluster prepending lkr to your commands:"
+    echo "  lkr k9s"
+    echo "  lkr kubectl get pods"
+    echo "  lkr helm list"
+}
+stop() {
+    $container_engine rm -f $docker_container
+    rm -rf $workdir
+}
+
+in_context() {
+    KUBECONFIG=$workdir/kubeconfig "$@"
+}
+
+
+if [ "$1" == "start" ]; then
+    start
+elif [ "$1" == "stop" ]; then
+    stop
+elif [ "$1" == "restart" ]; then
+    stop
+    start
+else
+    in_context "$@"
+fi
+
+
+
+
+
+
+
