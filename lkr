@@ -1,14 +1,9 @@
 #!/bin/bash
 set -e
 echo "
-██╗     ██╗  ██╗██████╗ 
-██║     ██║ ██╔╝██╔══██╗
-██║     █████╔╝ ██████╔╝
-██║     ██╔═██╗ ██╔══██╗
-███████╗██║  ██╗██║  ██║
-╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝                      
-
-"
+▒█░░░ ▒█░▄▀ ▒█▀▀█ 
+▒█░░░ ▒█▀▄░ ▒█▄▄▀ 
+▒█▄▄█ ▒█░▒█ ▒█░▒█"
 if [ "$#" -eq 0 ]; then
     echo "Speed up your local builds."
     echo "Prepend 'asap' to maven commands to get useless checks to be skipped while you're developing locally."
