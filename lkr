@@ -9,7 +9,6 @@ if [ "$#" -eq 0 ]; then
     echo "  stop: start a k8s instance"
     echo "  9: k9s"
     echo "  k: kubectl"
-    echo "$(tput setaf 2)asap mvn clean install$(tput setaf 4)"
     exit 1
 fi
 
@@ -29,10 +28,10 @@ start() {
     mkdir -p $workdir
     $container_engine run --rm -d \
         --name $container_name \
-        -v /sys/fs/cgroup:/sys/fs/cgroup \
+        -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
         --privileged \
         -p 6443:6443 \
-        $docker_image server --tls-san=localhost --disable=traefik
+        $docker_image server --tls-san=localhost --disable=traefik --service-node-port-range=30000-32767
     echo "k3s is starting..."
 
     with_retries $container_engine cp $container_name:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
@@ -47,7 +46,7 @@ start() {
     echo "  lkr helm list"
 }
 stop() {
-    $container_engine rm -f $container_name
+    $container_engine rm -f $container_name 2>/dev/null
     rm -rf $workdir
 }
 
@@ -61,6 +60,8 @@ if [ "$1" == "start" ]; then
     start
 elif [ "$1" == "stop" ]; then
     stop
+elif [ "$1" == "logs" ]; then
+    $container_engine logs $container_name
 elif [ "$1" == "k" ]; then
     shift
     in_context kubectl "$@"
