@@ -59,9 +59,16 @@ in_context() {
 
 load() {
     echo "Loading image $1"
-    dir_name=$(echo $1 | base64)
-    docker save $1 > $workdir/containers/$dir_name
+    id=$(docker inspect $1 | jq -r '.[0].Id')
+    filename=$(echo $id | base64)
+    host_filename=$workdir/containers/$filename
+    if [ ! -f "$host_filename" ]; then
+        echo "Generating image tarball.."
+        docker save $1 > $workdir/containers/$dir_name
+    fi
+    echo "Importing image.."
     $container_engine exec $container_name ctr image import /containers/$dir_name
+    echo "Loaded"
 }
 
 shell() {
