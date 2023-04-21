@@ -29,6 +29,7 @@ start() {
     $container_engine run --rm -d \
         --name $container_name \
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+        --cgroupns=host \
         --privileged \
         -p 6443:6443 \
         $docker_image server --tls-san=localhost --disable=traefik --service-node-port-range=30000-32767
