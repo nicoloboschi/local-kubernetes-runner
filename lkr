@@ -21,6 +21,10 @@ container_name=lkr
 docker_image=rancher/k3s:v1.25.3-k3s1
 workdir=/tmp/lkr
 
+with_retries() {
+    for i in {1..5}; do "$@" 2>/dev/null && break || sleep 1; done
+}
+
 start() {
     mkdir -p $workdir
     $container_engine run --rm -d \
@@ -30,10 +34,9 @@ start() {
         -p 6443:6443 \
         $docker_image server --tls-san=localhost --disable=traefik
     echo "k3s is starting..."
-    sleep 10
 
-    $container_engine cp $container_name:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
-    KUBECONFIG=$workdir/kubeconfig kubectl wait --for=condition=Ready nodes --all --timeout=600s
+    with_retries $container_engine cp $container_name:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
+    with_retries KUBECONFIG=$workdir/kubeconfig kubectl wait --for=condition=Ready nodes --all --timeout=600s
     echo "k3s ready, creating 'ns' namespace.."
     in_context kubectl create namespace ns
     in_context kubectl config set-context --current --namespace=ns
