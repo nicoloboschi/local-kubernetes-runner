@@ -49,7 +49,7 @@ lkr helm install
 `lkr` also introduces shortcuts for the most common tools.
 
 
-### Kubectl
+### Kubectl
 
 ```
 lkr k get pods
