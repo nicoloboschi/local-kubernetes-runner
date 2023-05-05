@@ -1,14 +1,20 @@
 #!/bin/bash
 set -e
 echo "𝖫𝖪𝖱 - 𝖫𝖮𝖢𝖠𝖫 𝖪𝖴𝖡𝖤𝖱𝖭𝖤𝖳𝖤𝖲 𝖱𝖴𝖭𝖭𝖤𝖱"
+usage="Run Local Kubernetes cluster.\n\n\tFind more information at https://github.com/nicoloboschi/lkr\n\nCommands:\n"
+usage+="\tstart\tStart the cluster and set as current context in your kubectl configuration.\n"
+usage+="\tstop\tStop the cluster.\n"
+usage+="\tlogs\tShow cluster logs.\n"
+usage+="\tset\tConfigure the cluster in your kubectl configuration.\n"
+usage+="\tuse\tConfigure the cluster in your kubectl configuration as current context.\n"
+usage+="\tload\tLoad a local docker image into the cluster's node.\n"
+usage+="\nShortcuts:\n"
+usage+="\t9\tStarts k9s for the cluster.\n"
+usage+="\tk\tKubectl command referred to the local cluster.\n"
+
+
 if [ "$#" -eq 0 ]; then
-    echo "Local Kubernetes Runner."
-    echo "lkr <any-command-targeting-local-k8s-instance>"
-    echo ""
-    echo "  start: start a k8s instance"
-    echo "  stop: start a k8s instance"
-    echo "  9: k9s"
-    echo "  k: kubectl"
+    printf "$usage"
     exit 1
 fi
 
@@ -75,6 +81,24 @@ shell() {
     $container_engine exec -it $container_name sh
 }
 
+set_in_kube_config() {
+    certificate_auth_data=$(cat $workdir/kubeconfig | grep certificate-authority-data | awk -F: '{print $2}' | tr -d ' ')
+    client_ca_data=$(cat $workdir/kubeconfig | grep client-certificate-data | awk -F: '{print $2}' | tr -d ' ')
+    client_key_data=$(cat $workdir/kubeconfig | grep client-key-data | awk -F: '{print $2}' | tr -d ' ')
+
+    kubectl config set-cluster lkr --server="https://127.0.0.1:6443" > /dev/null
+    kubectl config set clusters.lkr.certificate-authority-data $certificate_auth_data > /dev/null
+    
+    kubectl config set-credentials lkr > /dev/null
+    kubectl config set users.lkr.client-certificate-data $client_ca_data > /dev/null
+    kubectl config set users.lkr.client-key-data $client_key_data > /dev/null
+    kubectl config set-context lkr --cluster=lkr --namespace=ns --user=lkr > /dev/null
+    echo "Context "lkr" suffessfully configured."
+}
+use_in_kube_config() {
+    kubectl config use-context lkr
+}
+
 if [ "$1" == "start" ]; then
     stop
     start
@@ -84,6 +108,11 @@ elif [ "$1" == "logs" ]; then
     $container_engine logs $container_name
 elif [ "$1" == "shell" ]; then
     shell
+elif [ "$1" == "set" ]; then
+    set_in_kube_config
+    use_in_kube_config
+elif [ "$1" == "use" ]; then
+    use_in_kube_config
 elif [ "$1" == "load" ]; then
     shift 
     load "$@"
