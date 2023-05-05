@@ -102,6 +102,8 @@ use_in_kube_config() {
 if [ "$1" == "start" ]; then
     stop
     start
+    set_in_kube_config
+    use_in_kube_config
 elif [ "$1" == "stop" ]; then
     stop
 elif [ "$1" == "logs" ]; then
