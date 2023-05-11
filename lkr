@@ -8,6 +8,7 @@ usage+="\tlogs\tShow cluster logs.\n"
 usage+="\tset\tConfigure the cluster in your kubectl configuration.\n"
 usage+="\tuse\tConfigure the cluster in your kubectl configuration as current context.\n"
 usage+="\tload\tLoad a local docker image into the cluster's node.\n"
+usage+="\tlist\List all docker images available into the cluster's node.\n"
 usage+="\nShortcuts:\n"
 usage+="\t9\tStarts k9s for the cluster.\n"
 usage+="\tk\tKubectl command referred to the local cluster.\n"
@@ -62,16 +63,24 @@ in_context() {
 
 load() {
     echo "Loading image $1"
+    docker pull $1
     id=$(docker inspect $1 | jq -r '.[0].Id')
     filename=$(echo $id | base64)
     host_filename=$workdir/containers/$filename
     if [ ! -f "$host_filename" ]; then
         echo "Generating image tarball.."
-        docker save $1 > $workdir/containers/$dir_name
+        set -x
+        docker save $1 > $host_filename
     fi
     echo "Importing image.."
-    $container_engine exec $container_name ctr image import /containers/$dir_name
+    $container_engine exec $container_name ctr image import /containers/$filename
     echo "Loaded"
+}
+
+
+list() {
+    echo "Node images:"
+    $container_engine exec $container_name ctr image list | awk '{print $1}' | grep -v "sha256"
 }
 
 shell() {
@@ -114,6 +123,8 @@ elif [ "$1" == "use" ]; then
 elif [ "$1" == "load" ]; then
     shift 
     load "$@"
+elif [ "$1" == "list" ]; then
+    list
 elif [ "$1" == "k" ]; then
     shift
     in_context kubectl "$@"
