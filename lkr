@@ -63,14 +63,18 @@ in_context() {
 
 load() {
     echo "Loading image $1"
-    docker pull $1
     id=$(docker inspect $1 | jq -r '.[0].Id')
+    if [ "$id" == "null" ]; then
+        echo "Image not found, please pull it first."
+        exit 1
+    fi
     filename=$(echo $id | base64)
+    host_filename_done=$workdir/containers/${filename}_done
     host_filename=$workdir/containers/$filename
-    if [ ! -f "$host_filename" ]; then
+    if [ ! -f "$host_filename_done" ]; then
         echo "Generating image tarball.."
-        set -x
         docker save $1 > $host_filename
+        touch $host_filename_done
     fi
     echo "Importing image.."
     $container_engine exec $container_name ctr image import /containers/$filename
