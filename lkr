@@ -14,6 +14,10 @@ usage+="\t9\tStarts k9s for the cluster.\n"
 usage+="\tk\tKubectl command referred to the local cluster.\n"
 
 
+trap "exit" INT TERM
+trap "kill 0" EXIT
+
+
 
 if [ "$#" -eq 0 ]; then
     printf "$usage"
@@ -108,13 +112,14 @@ load() {
     host_filename_done=$workdir/containers/${filename}_done
     host_filename=$workdir/containers/$filename
     if [ ! -f "$host_filename_done" ]; then
-        lkr_log "Generating image tarball.."
+        lkr_log "Generating image tarball."
         docker save $1 > $host_filename
         touch $host_filename_done
+        lkr_log "Generated."
     fi
-    lkr_log "Importing image.."
+    lkr_log "Importing image."
     $container_engine exec $container_name ctr image import /containers/$filename
-    lkr_log "Loaded"
+    lkr_log "Imported."
 }
 
 
