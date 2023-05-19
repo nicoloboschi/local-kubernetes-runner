@@ -31,7 +31,15 @@ with_retries() {
     for i in {1..5}; do "$@" 2>/dev/null && break || sleep 1; done
 }
 
+cleanup_docker() {
+    echo "Cleaning up docker.."
+    docker volume prune -f >/dev/null 2>&1 || true
+    docker network prune -f >/dev/null 2>&1 || true   
+}
+
+
 start() {
+    cleanup_docker
     mkdir -p $workdir
     mkdir -p $workdir/containers
     echo "Starting the cluster.."
