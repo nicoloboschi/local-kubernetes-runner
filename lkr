@@ -39,6 +39,22 @@ lkr_logv() {
     fi
 }
 
+with_progress_bar() {
+    ("$@") & 
+    pid=$!
+    i=1
+    sp="/-\|"
+    echo -n ' '
+
+    jobs="NaN"
+    while [ $jobs != "0" ]; do
+        jobs=$(jobs | grep Running | wc -l)
+        printf "\b${sp:i++%${#sp}:1}"
+        printf "\033[0K\r"
+        sleep 0.1
+    done
+}
+
 with_retries() {
     for i in {1..5}; do "$@" 2>/dev/null && break || sleep 1; done
 }
@@ -103,7 +119,6 @@ load() {
 
 
 list() {
-    lkr_log "Node images:"
     $container_engine exec $container_name ctr image list | awk '{print $1}' | grep -v "sha256"
 }
 
@@ -129,29 +144,29 @@ use_in_kube_config() {
 }
 
 if [ "$1" == "start" ]; then
-    stop
-    start
-    set_in_kube_config
-    use_in_kube_config
+    with_progress_bar stop
+    with_progress_bar start
+    with_progress_bar set_in_kube_config
+    with_progress_bar use_in_kube_config
 elif [ "$1" == "stop" ]; then
-    stop
+    with_progress_bar stop
 elif [ "$1" == "logs" ]; then
     $container_engine logs $container_name
 elif [ "$1" == "shell" ]; then
     shell
 elif [ "$1" == "set" ]; then
-    set_in_kube_config
-    use_in_kube_config
+    with_progress_bar set_in_kube_config
+    with_progress_bar use_in_kube_config
 elif [ "$1" == "use" ]; then
-    use_in_kube_config
+    with_progress_bar use_in_kube_config
 elif [ "$1" == "load" ]; then
     shift 
-    load "$@"
+    with_progress_bar load "$@"
 elif [ "$1" == "list" ]; then
-    list
+    with_progress_bar list
 elif [ "$1" == "k" ]; then
     shift
-    in_context kubectl "$@"
+    with_progress_bar in_context kubectl "$@"
 elif [ "$1" == "9" ]; then
     shift
     in_context k9s "$@"
