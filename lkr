@@ -14,6 +14,7 @@ usage+="\t9\tStarts k9s for the cluster.\n"
 usage+="\tk\tKubectl command referred to the local cluster.\n"
 
 
+
 if [ "$#" -eq 0 ]; then
     printf "$usage"
     exit 1
@@ -27,12 +28,23 @@ container_name=lkr
 docker_image=rancher/k3s:v1.25.3-k3s1
 workdir=/tmp/lkr
 
+LKR_VERBOSE=${LKR_VERBOSE:-"false"}
+
+lkr_log() {
+    echo "$@"
+}
+lkr_logv() {
+    if [ "$LKR_VERBOSE" == "true" ]; then
+        echo "$@"
+    fi
+}
+
 with_retries() {
     for i in {1..5}; do "$@" 2>/dev/null && break || sleep 1; done
 }
 
 cleanup_docker() {
-    echo "Cleaning up docker.."
+    lkr_logv "Cleaning up docker."
     docker volume prune -f >/dev/null 2>&1 || true
     docker network prune -f >/dev/null 2>&1 || true   
 }
@@ -42,7 +54,7 @@ start() {
     cleanup_docker
     mkdir -p $workdir
     mkdir -p $workdir/containers
-    echo "Starting the cluster.."
+    lkr_log "Starting the cluster."
     ($container_engine run --rm -d \
         --name $container_name \
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
@@ -55,10 +67,10 @@ start() {
 
     with_retries $container_engine cp $container_name:/etc/rancher/k3s/k3s.yaml $workdir/kubeconfig
     with_retries KUBECONFIG=$workdir/kubeconfig kubectl wait --for=condition=Ready nodes --all --timeout=600s
-    echo "Cluster ready, configuring 'ns' namespace."
+    lkr_log "Cluster ready, configuring 'ns' namespace."
     in_context kubectl create namespace ns
     in_context kubectl config set-context --current --namespace=ns > /dev/null
-    echo "Cluster configured."
+    lkr_log "Cluster configured."
 }
 stop() {
     $container_engine rm -f $container_name >/dev/null
@@ -70,28 +82,28 @@ in_context() {
 }
 
 load() {
-    echo "Loading image $1"
+    lkr_log "Loading image $1"
     id=$(docker inspect $1 | jq -r '.[0].Id')
     if [ "$id" == "null" ]; then
-        echo "Image not found, please pull it first."
+        lkr_log "Image not found, please pull it first."
         exit 1
     fi
     filename=$(echo $id | base64)
     host_filename_done=$workdir/containers/${filename}_done
     host_filename=$workdir/containers/$filename
     if [ ! -f "$host_filename_done" ]; then
-        echo "Generating image tarball.."
+        lkr_log "Generating image tarball.."
         docker save $1 > $host_filename
         touch $host_filename_done
     fi
-    echo "Importing image.."
+    lkr_log "Importing image.."
     $container_engine exec $container_name ctr image import /containers/$filename
-    echo "Loaded"
+    lkr_log "Loaded"
 }
 
 
 list() {
-    echo "Node images:"
+    lkr_log "Node images:"
     $container_engine exec $container_name ctr image list | awk '{print $1}' | grep -v "sha256"
 }
 

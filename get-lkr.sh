@@ -55,7 +55,8 @@ echo "$(tput setaf 2)[OK]$(tput setaf 7) - curl command is available"
 
 echo ""
 echo "$(tput setaf 6)Downloading:$(tput setaf 7)"
-curl --fail --location --progress-bar "$URL" > "$lkr_bin/lkr"  
+rm -rf $lkr_bin/lkr
+curl --fail --location --progress-bar "$URL" > "$lkr_bin/lkr"
 chmod +x $lkr_bin/*
 echo "$(tput setaf 2)[OK]$(tput setaf 7) - Downloaded & Installed"  
 
