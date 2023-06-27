@@ -17,7 +17,6 @@ usage+="\tk\tKubectl command referred to the local cluster.\n"
 
 
 trap "exit" INT TERM
-trap "kill 0" EXIT
 
 
 
