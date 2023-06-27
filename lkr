@@ -164,9 +164,9 @@ get_status() {
 if [ "$1" == "start" ]; then
     if [ "$(get_status)" == "Running" ]; then
         lkr_log "Cluster already running."
-        exit 1
+    else
+        with_progress_bar start
     fi
-    with_progress_bar start
 elif [ "$1" == "status" ]; then
     get_status
 elif [ "$1" == "restart" ]; then
