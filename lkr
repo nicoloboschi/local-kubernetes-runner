@@ -4,6 +4,8 @@ echo "𝖫𝖪𝖱 - 𝖫𝖮𝖢𝖠𝖫 𝖪𝖴𝖡𝖤𝖱𝖭𝖤𝖳𝖤�
 usage="Run Local Kubernetes cluster.\n\n\tFind more information at https://github.com/nicoloboschi/lkr\n\nCommands:\n"
 usage+="\tstart\tStart the cluster and set as current context in your kubectl configuration.\n"
 usage+="\tstop\tStop the cluster.\n"
+usage+="\trestart\tStop and restart the cluster and set as current context in your kubectl configuration.\n"
+usage+="\tstatus\tCheck if the cluster is running or not.\n"
 usage+="\tlogs\tShow cluster logs.\n"
 usage+="\tset\tConfigure the cluster in your kubectl configuration.\n"
 usage+="\tuse\tConfigure the cluster in your kubectl configuration as current context.\n"
@@ -91,6 +93,8 @@ start() {
     in_context kubectl create namespace ns
     in_context kubectl config set-context --current --namespace=ns > /dev/null
     lkr_log "Cluster configured."
+    with_progress_bar set_in_kube_config
+    with_progress_bar use_in_kube_config
 }
 stop() {
     $container_engine rm -f $container_name >/dev/null
@@ -148,7 +152,24 @@ use_in_kube_config() {
     kubectl config use-context lkr
 }
 
+get_status() {
+    output=$($container_engine ps | grep $container_name)
+    if [ "$output" == "" ]; then
+        echo "Stopped"
+    else
+        echo "Running"
+    fi
+}
+
 if [ "$1" == "start" ]; then
+    if [ "$(get_status)" == "Running" ]; then
+        lkr_log "Cluster already running."
+        exit 1
+    fi
+    with_progress_bar start
+elif [ "$1" == "status" ]; then
+    get_status
+elif [ "$1" == "restart" ]; then
     with_progress_bar stop
     with_progress_bar start
     with_progress_bar set_in_kube_config
