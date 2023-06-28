@@ -152,7 +152,7 @@ use_in_kube_config() {
 }
 
 get_status() {
-    output=$($container_engine ps | grep $container_name)
+    output=$(($container_engine ps | grep $container_name) || echo "")
     if [ "$output" == "" ]; then
         echo "Stopped"
     else
