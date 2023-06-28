@@ -163,6 +163,8 @@ get_status() {
 if [ "$1" == "start" ]; then
     if [ "$(get_status)" == "Running" ]; then
         lkr_log "Cluster already running."
+        with_progress_bar set_in_kube_config
+        with_progress_bar use_in_kube_config
     else
         with_progress_bar start
     fi
