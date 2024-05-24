@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+trap exit SIGINT;
 echo "𝖫𝖪𝖱 - 𝖫𝖮𝖢𝖠𝖫 𝖪𝖴𝖡𝖤𝖱𝖭𝖤𝖳𝖤𝖲 𝖱𝖴𝖭𝖭𝖤𝖱"
 usage="Run Local Kubernetes cluster.\n\n\tFind more information at https://github.com/nicoloboschi/lkr\n\nCommands:\n"
 usage+="\tstart\tStart the cluster and set as current context in your kubectl configuration.\n"
@@ -25,12 +26,22 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
-
+detect_k3s_image() {
+  if [ -z "$LKR_IMAGE" ]; then
+    if [ "$(uname -m)" == "arm64" ]; then
+        echo "rancher/k3s:v1.30.1-k3s1-arm64"
+    else
+        echo "rancher/k3s:v1.30.1-k3s1"
+    fi
+  else
+    echo "$LKR_IMAGE"
+  fi
+}
 
 #container_engine=podman
 container_engine=docker
 container_name=lkr
-docker_image=rancher/k3s:v1.25.3-k3s1
+docker_image=$(detect_k3s_image)
 workdir=/tmp/lkr
 
 LKR_VERBOSE=${LKR_VERBOSE:-"false"}
@@ -75,7 +86,7 @@ start() {
     cleanup_docker
     mkdir -p $workdir
     mkdir -p $workdir/containers
-    lkr_log "Starting the cluster."
+    lkr_log "Starting the cluster. (k3s image: $docker_image)"
     ($container_engine run --rm -d \
         --name $container_name \
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
