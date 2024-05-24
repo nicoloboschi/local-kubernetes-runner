@@ -132,7 +132,7 @@ load() {
         lkr_log "Generated."
     fi
     lkr_log "Importing image."
-    $container_engine exec $container_name ctr image import /containers/$filename
+    $container_engine exec $container_name ctr image import --all-platforms /containers/$filename
     lkr_log "Imported."
 }
 
