@@ -6,7 +6,8 @@ Supported engines:
 - `k3s`
 
 ## Requirements
-- Docker
+- `Docker`
+- `kubectl`
 
 ## Get started
 
@@ -16,7 +17,7 @@ curl -Ls "https://raw.githubusercontent.com/nicoloboschi/local-kubernetes-runner
 
 
 ## Cluster lifecycle
-To start the kubernetes cluster:
+To start the cluster:
 
 ```
 lkr start
@@ -24,42 +25,35 @@ lkr start
 # lkr stop
 ```
 
+By default the kubectl context is updated to the `lkr` cluster, so you can run your favourite tools targeting the new cluster.
+
 To load images to the cluster from the host:
 
 ```
 lkr load <myimage>
 ```
 
-To debug the node: 
+
+## References
 
 ```
-lkr shell
+𝖫𝖪𝖱 - 𝖫𝖮𝖢𝖠𝖫 𝖪𝖴𝖡𝖤𝖱𝖭𝖤𝖳𝖤𝖲 𝖱𝖴𝖭𝖭𝖤𝖱
+Run Local Kubernetes cluster.
+
+	Find more information at https://github.com/nicoloboschi/lkr
+
+Commands:
+	start	Start the cluster and set as current context in your kubectl configuration.
+	stop	Stop the cluster.
+	restart	Stop and restart the cluster and set as current context in your kubectl configuration.
+	status	Check if the cluster is running or not.
+	logs	Show cluster logs.
+	set	Configure the cluster in your kubectl configuration.
+	use	Configure the cluster in your kubectl configuration as current context.
+	load	Load a local docker image into the cluster's node.
+	list	List all docker images available into the cluster's node.
+
+Shortcuts:
+	9	Starts k9s for the cluster.
+	k	Kubectl command referred to the local cluster.
 ```
-
-## Working with applications
-
-LKR doesn't change your local kube config.
-In order to deploy and monitor applications in LKR, you need to prepend your commands with `lkr`.
-
-```
-lkr kubectl get pods
-lkr helm install
-```
-
-`lkr` also introduces shortcuts for the most common tools.
-
-
-### Kubectl
-
-```
-lkr k get pods
-```
-
-### K9s
-
-```
-lkr 9
-```
-
-
-
